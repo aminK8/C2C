@@ -5,8 +5,8 @@ from data import DepthToSketchDataset
 
 
 def visualize_sample(sample, index):
-    depth_image = sample['depth_image'].numpy().transpose(1, 2, 0)
-    sketch_image = sample['sketch_image'].numpy().transpose(1, 2, 0)
+    depth_image = sample['depth_image'].numpy()[0].transpose(1, 2, 0)
+    sketch_image = sample['sketch_image'].numpy()[0].transpose(1, 2, 0)
 
     fig, axes = plt.subplots(1, 2, figsize=(10, 5))
     axes[0].imshow(depth_image)
@@ -21,11 +21,15 @@ def visualize_sample(sample, index):
     plt.show()
 
 def test_dataloader():
-    path_json = "path/to/your/json_file.json"  # Replace with the actual path to your JSON file
-    path_meta = "path/to/your/data_root_folder"  # Replace with the actual path to your data root folder
+    path_json_depth = "/home/karimimonsefi.1/MultiGen-20K/MultiGen-20K/json_files/aesthetics_plus_all_group_depth_all.json"  
+    path_json_sketch = "/home/karimimonsefi.1/MultiGen-20K/MultiGen-20K/json_files/aesthetics_plus_all_group_hed_all.json"
+    path_meta = "/home/karimimonsefi.1/MultiGen-20K/MultiGen-20K/conditions/" 
 
     # Instantiate the dataset
-    dataset = DepthToSketchDataset(path_json=path_json, path_meta=path_meta, resolution=256)
+    dataset = DepthToSketchDataset(path_json_depth=path_json_depth,
+                                   path_json_sketch=path_json_sketch, 
+                                   path_meta=path_meta, 
+                                   resolution=256)
 
     # Create a dataloader
     dataloader = DataLoader(dataset, batch_size=1, shuffle=True)

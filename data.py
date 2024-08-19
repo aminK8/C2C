@@ -6,7 +6,7 @@ from PIL import Image, UnidentifiedImageError
 import cv2
 
 class DepthToSketchDataset(Dataset):
-    def __init__(self, path_json: str, path_meta: str, resolution: int = 512):
+    def __init__(self, path_json_depth: str, path_json_sketch: str, path_meta: str, resolution: int = 512):
         """
         Depth to Sketch Dataset/Dataloader.
 
@@ -19,11 +19,18 @@ class DepthToSketchDataset(Dataset):
         self.path_meta = path_meta
         self.resolution = resolution
 
-        # Load metadata from JSON file
-        with open(path_json, 'rt') as f:
-            self.data = json.load(f)
+        self.data_depth = []
+        self.data_sketch = []
 
-        self.list_data = list(self.data.keys())
+        with open(path_json_depth, 'rt') as f:
+            for line in f:
+                self.data_depth.append(json.loads(line))
+
+        with open(path_json_sketch, 'rt') as f:
+            for line in f:
+                self.data_sketch.append(json.loads(line))
+
+        # self.list_data = list(self.data.keys())
         self.transform = None  # Optional transform function
 
     def imread(self, image_path):
@@ -42,7 +49,7 @@ class DepthToSketchDataset(Dataset):
         return img
 
     def __len__(self):
-        return len(self.data)
+        return len(self.data_sketch)
 
     def __getitem__(self, idx):
         """
@@ -59,10 +66,10 @@ class DepthToSketchDataset(Dataset):
             "depth_img" : depth image numpy array (C, H, W)
             "sketch_img" : sketch image numpy array (C, H, W)
         """
-        filename = self.list_data[idx]
+        # filename = self.list_data[idx]
 
         # Load depth image
-        depth_image = self.imread(self.path_meta + "/depth/" + self.data[filename]['depth'])
+        depth_image = self.imread(self.path_meta + self.data_depth[idx]['control_depth'].replace("aesthetics_6_25_plus_", ""))
         if depth_image is None:
             depth_image = torch.zeros((3, self.resolution, self.resolution))  # Handle missing depth image
         else:
@@ -72,7 +79,7 @@ class DepthToSketchDataset(Dataset):
             depth_image = torch.from_numpy(depth_image)
 
         # Load sketch image
-        sketch_image = self.imread(self.path_meta + "/sketch/" + self.data[filename]['sketch'])
+        sketch_image = self.imread(self.path_meta + self.data_sketch[idx]['control_hed'].replace("aesthetics_6_25_plus_", ""))
         if sketch_image is None:
             sketch_image = torch.zeros((3, self.resolution, self.resolution))  # Handle missing sketch image
         else:
@@ -81,7 +88,10 @@ class DepthToSketchDataset(Dataset):
             sketch_image = sketch_image.transpose(2, 0, 1)
             sketch_image = torch.from_numpy(sketch_image)
 
-        sample = dict(depth_image=depth_image, sketch_image=sketch_image, filename=filename)
+        sample = dict(depth_image=depth_image,
+                      sketch_image=sketch_image,
+                      filename_sketch=self.data_sketch[idx]['control_hed'].replace("aesthetics_6_25_plus_", ""),
+                      filename_depth= self.data_depth[idx]['control_depth'].replace("aesthetics_6_25_plus_", ""))
 
         if self.transform is not None:
             sample = self.transform(sample)
