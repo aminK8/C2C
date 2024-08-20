@@ -1,0 +1,18 @@
+# Usage: pip install -r requirements.txt
+
+--extra-index-url https://download.pytorch.org/whl/cu118
+torch==2.1.2
+torchvision==0.16.2
+
+tqdm~=4.64.1
+wandb==0.17.4
+opencv-python==4.10.0.84
+numpy==1.26.4
+scipy==1.14.0
+scikit-image==0.24.0
+pandas==2.2.2
+fsspec==2024.6.1
+ftfy==6.2.0
+regex==2024.5.15
+deepspeed==0.14.2
+scikit-learn==1.5.1

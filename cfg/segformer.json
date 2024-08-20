@@ -1,0 +1,62 @@
+{
+    "data":{
+        "path_meta": "/home/zhou.2656/datasets/MultiGen-20K/conditions/",
+        "path_json_depth": "/home/zhou.2656/datasets/MultiGen-20K/json_files/aesthetics_plus_all_group_depth_all.json",
+        "path_json_sketch": "/home/zhou.2656/datasets/MultiGen-20K/json_files/aesthetics_plus_all_group_hed_all.json"
+    },
+    "processor":{
+        "do_resize": true,
+        "resize": [256, 256],
+        "do_normalize": true,
+        "image_mean": [
+            0.485,
+            0.456,
+            0.406
+        ],
+        "image_std": [
+            0.229,
+            0.224,
+            0.225
+        ],
+        "do_flip": true,
+        "flip_p": 0.3
+    },
+    "model":{
+        "name": "segformer",
+        "config_file": "pretrained_models/segformer/segformer_mit-b5_8xb2-160k_ade20k-512x512.py",
+        "pretrained_checkpoint_file": "pretrained_models/segformer/segformer_mit-b5_512x512_160k_ade20k_20210726_145235-94cedf59.pth",
+        "encdec_out_channels": 256,
+        "num_seg_classes": 256
+    },
+    "optimizer": {
+        "type": "AdamW",
+        "lr": 5e-4,
+        "betas": [
+            0.9,
+            0.999
+        ],
+        "eps": 1e-8,
+        "weight_decay": 0.04
+    },
+    "lr_scheduler":{
+        "type": "WarmupCosineLR",
+        "start_lr": 1e-5,
+        "base_lr": 5e-4,
+        "end_lr": 1e-6,
+        "warmup_epochs": 5
+    },
+    "losses":{
+        "type": "CE"
+    },
+    "deepspeed":{
+        "train_micro_batch_size_per_gpu": 32,
+        "gradient_accumulation_steps": 1,
+        "fp16": {
+            "enabled": false
+        },
+        "gradient_clipping": 1.0,
+        "zero_optimization": {
+            "stage": 3
+        }
+    }
+}

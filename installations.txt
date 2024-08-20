@@ -1,0 +1,24 @@
+module load cuda/11.8
+# which nvcc
+# export CUDA_HOME=/apps/spack/0.17/root/linux-rhel8-zen/cuda/gcc/8.4.1/11.8.0-eyqbbsj
+# conda env create -f environment.yml
+conda create -n C2C python=3.10
+source activate C2C
+pip install -r requirements.txt
+
+pip install -U openmim
+mim install mmengine
+mim install mmcv==2.1.0
+mim install mmpretrain==1.2.0
+pip install mmsegmentation==1.2.2
+
+# download the pretrained models from openmim
+mim download mmsegmentation --config upernet_r101_4xb4-160k_ade20k-512x512 --dest ./pretrained_models/upernet_r101
+mim download mmsegmentation --config segformer_mit-b5_8xb2-160k_ade20k-512x512 --dest ./pretrained_models/segformer
+mim download mmsegmentation --config swin-base-patch4-window12-in1k-384x384-pre_upernet_8xb2-160k_ade20k-512x512 --dest ./pretrained_models/upernet_swin_b4
+mim download mmsegmentation --config convnext-large_upernet_8xb2-amp-160k_ade20k-640x640 --dest ./pretrained_models/upernet_convnext
+
+# For Mask2Former, install mmdet
+pip install mmdet>=3.0.0rc4
+# pretrained mask2former needs to be downloaded manually
+# from https://download.openmmlab.com/mmsegmentation/v0.5/mask2former/mask2former_swin-b-in22k-384x384-pre_8xb2-160k_ade20k-640x640/mask2former_swin-b-in22k-384x384-pre_8xb2-160k_ade20k-640x640_20221203_235230-7ec0f569.pth
