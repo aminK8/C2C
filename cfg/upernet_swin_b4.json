@@ -40,10 +40,13 @@
     },
     "lr_scheduler":{
         "type": "WarmupCosineLR",
-        "start_lr": 1e-4,
+        "start_lr": 1e-5,
         "base_lr": 5e-4,
         "end_lr": 1e-6,
         "warmup_epochs": 5
+    },
+    "losses":{
+        "type": "CE"
     },
     "deepspeed":{
         "train_micro_batch_size_per_gpu": 32,

@@ -166,3 +166,4 @@ pretrained_models/**/*.pth
 runs/
 *.out
 wandb/
+tests/

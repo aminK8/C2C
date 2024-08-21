@@ -31,8 +31,8 @@ source activate C2C
 # accelerate config
 echo "Starting accelerate..."
 srun python3 train.py \
-    --config_file cfg/segformer.json\
-    --checkpoint_dir runs/segformer_exp0\
+    --config_file cfg/upernet_swin_b4.json\
+    --checkpoint_dir runs/upernet_swin_b4_exp0\
     --epochs 100\
-    --experiment_name training_exp0
+    --experiment_name upernet_swin_b4_exp0
 # srun python3 train.py --config_file cfg/segformer.json --checkpoint_dir runs/segformer_exp0 --epochs 100 --experiment_name training_exp0

@@ -179,6 +179,17 @@ def train(args):
             best_val_epoch = epoch
             # save checkpoint, all processes need to call this function
             save_checkpoint_ds(model_engine, epoch, best_val_loss, best_val_epoch, args)
+
+            # save model itself
+            if args.global_rank == 0:
+                # Check if using ZeRO-3 to decide how to get the state_dict
+                if model_engine.zero_optimization_stage() == 3:
+                    # For ZeRO-3, gather the full model state_dict
+                    state_dict_last = get_fp32_state_dict_from_zero_checkpoint(args.checkpoint_dir)  # load latest checkpoint
+                else:
+                    # For other ZeRO stages or no ZeRO, directly access the model's state_dict
+                    state_dict_last = copy.deepcopy(model_engine.module.state_dict())
+                torch.save(state_dict_last, os.path.join(args.checkpoint_dir, f'model_{epoch}.pt'))
             print_main(f'Better validation performance obtained at epoch {epoch}, checkpoint saved.')
     print_main(f'Best validation performance obtained at epoch {best_val_epoch}, with loss {best_val_loss}.')
 
@@ -190,14 +201,10 @@ def train(args):
         if model_engine.zero_optimization_stage() == 3:
             # For ZeRO-3, gather the full model state_dict
             state_dict_last = get_fp32_state_dict_from_zero_checkpoint(args.checkpoint_dir)  # load latest checkpoint
-            state_dict_best = get_fp32_state_dict_from_zero_checkpoint(args.checkpoint_dir, tag=best_val_epoch)  # load latest checkpoint
         else:
             # For other ZeRO stages or no ZeRO, directly access the model's state_dict
             state_dict_last = copy.deepcopy(model_engine.module.state_dict())
-            model_engine.load_checkpoint(args.checkpoint_dir, best_val_epoch)
-            state_dict_best = model_engine.module.state_dict()
         torch.save(state_dict_last, os.path.join(args.checkpoint_dir, 'model_last.pt'))
-        torch.save(state_dict_best, os.path.join(args.checkpoint_dir, 'model_best.pt'))
 
 
 def train_one_epoch(model_engine, criterion, dataloader, logger):
@@ -231,13 +238,12 @@ def validation_one_epoch(model_engine, criterion, val_dataloader, epoch, logger)
             outputs = model_engine(inputs)
             tmp_eval_loss = criterion(outputs, labels)
 
-            dist.reduce(tmp_eval_loss, 0)
-            # Reduce to get the loss from all the GPU's
-            if model_engine.is_global_main_process:
-                tmp_eval_loss = tmp_eval_loss / dist.get_world_size()
-            eval_loss += tmp_eval_loss.mean().item()
+            eval_loss += tmp_eval_loss.mean()
             nb_eval_steps += 1
     eval_loss = eval_loss / nb_eval_steps
+    # Reduce to get the loss from all the GPU's
+    dist.all_reduce(eval_loss)
+    eval_loss = eval_loss.item() / dist.get_world_size()
     logger.log({"val_loss": eval_loss})
     print_main(f"Validation Loss for epoch {epoch} is: {eval_loss}")
     return eval_loss
